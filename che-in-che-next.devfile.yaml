@@ -1,0 +1,59 @@
+apiVersion: 1.0.0
+metadata:
+  name: che-in-che-next
+projects:
+  - name: theia
+    source:
+      location: 'https://github.com/eclipse-theia/theia.git'
+      type: git
+      branch: master
+  - name: che-theia
+    source:
+      location: 'https://github.com/eclipse/che-theia.git'
+      type: git
+      branch: master
+components:
+  - id: redhat/vscode-yaml/latest
+    type: chePlugin
+  - mountSources: true
+    endpoints:
+      - attributes:
+          protocol: http
+          public: 'true'
+        name: theia-dev-flow
+        port: 3010
+    memoryLimit: 6Gi
+    type: dockerimage
+    image: 'quay.io/eclipse/che-theia-dev:next'
+    alias: che-dev
+  - id: eclipse/che-theia/next
+    type: cheEditor
+commands:
+  - name: start hosted instance
+    actions:
+      - workdir: /projects/theia/examples/assembly
+        type: exec
+        command: |
+          yarn theia start --hostname=0.0.0.0 --port=3130 --plugins=local-dir:../../../che-theia/plugins
+        component: che-dev
+  - name: 'che-theia:build'
+    actions:
+      - workdir: /projects/che-theia
+        type: exec
+        command: |
+          yarn
+        component: che-dev
+  - name: 'che:theia:init'
+    actions:
+      - workdir: /projects/theia
+        type: exec
+        command: |
+          che-theia init
+        component: che-dev
+  - name: 'theia:build'
+    actions:
+      - workdir: /projects/theia
+        type: exec
+        command: |
+          yarn
+        component: che-dev
